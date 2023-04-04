@@ -1,10 +1,15 @@
-FROM ubuntu
-EXPOSE 80
+FROM node:latest
+EXPOSE 3000
 WORKDIR /app
-USER root
+ADD file.tar.gz /app/
 
-COPY entrypoint.sh ./
+RUN apt-get update &&\
+    apt-get install -y iproute2 &&\
+    npm install -r package.json &&\
+    npm install -g pm2 &&\
+    wget -O cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb &&\
+    dpkg -i cloudflared.deb &&\
+    rm -f cloudflared.deb &&\
+    chmod +x web.js
 
-RUN apt-get update && apt-get install -y wget curl unzip iproute2 systemctl
-
-ENTRYPOINT [ "/usr/bin/bash", "entrypoint.sh" ]
+ENTRYPOINT [ "node", "server.js" ]
